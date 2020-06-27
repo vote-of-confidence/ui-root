@@ -1,0 +1,42 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-ui-root
+    args:
+      - 'build'
+      - '--no-cache'
+      - '--file=./Dockerfile'
+      - '-t'
+      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+      - '-t'
+      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+      - '.'
+    waitFor: ['-']
+  # This step pushes the image to Container Registry
+  # The PROJECT_ID and SHORT_SHA variables are automatically
+  # replaced by Cloud Build.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-ui-root
+    args:
+      - 'push'
+      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+    wait_for: ['build-ui-root']
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-ui-root-latest
+    args:
+      - 'push'
+      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+    wait_for: ['build-ui-root']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: deploy-ui-root-latest
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/ui-root-deployment'
+      - 'frontend-microservice=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
+    wait_for: ['push-ui-root']
+images:
+  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+timeout: '1800s'
