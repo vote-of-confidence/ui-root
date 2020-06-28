@@ -32,7 +32,7 @@ steps:
       - 'set'
       - 'image'
       - 'deployment/ui-root-deployment'
-      - 'frontend-microservice=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+      - 'ui-root=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
