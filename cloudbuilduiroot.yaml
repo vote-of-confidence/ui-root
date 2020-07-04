@@ -41,7 +41,7 @@ steps:
   # [START cloudbuild-trigger-cd]
   # This step clones the ui-root-env repository
   - name: 'gcr.io/cloud-builders/gcloud'
-    id: Clone env repository
+    id: clone_env_repository
     entrypoint: /bin/sh
     args:
       - '-c'
@@ -60,6 +60,7 @@ steps:
       - |
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ui-root-env/kubernetes.yaml
+    wait_for: ['push-ui-root']
 
   # This step pushes the manifest back to ui-root-env
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -75,6 +76,7 @@ steps:
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
         git push origin candidate
+    wait_for: ['clone_env_repository']
 
 # [END cloudbuild-trigger-cd]
 images:
