@@ -40,13 +40,14 @@ steps:
 
   # [START cloudbuild-trigger-cd]
   # This step clones the ui-root-env repository
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: 'gcr.io/cloud-builders/git'
     id: clone_env_repository
-    entrypoint: /bin/sh
+    entrypoint: 'bash'
+    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
-        gcloud source repos clone ui-root-env && \
+        git clone https://github.com/vote-of-confidence/ui-root-env.git  && \
         cd ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
