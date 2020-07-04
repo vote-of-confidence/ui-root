@@ -50,21 +50,22 @@ steps:
         cd ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+    wait_for: ['push-ui-root']
 
   # This step generates the new manifest
   - name: 'gcr.io/cloud-builders/gcloud'
-    id: Generate manifest
+    id: generate_manifest
     entrypoint: /bin/sh
     args:
       - '-c'
       - |
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ui-root-env/kubernetes.yaml
-    wait_for: ['push-ui-root']
+    wait_for: ['clone_env_repository']
 
   # This step pushes the manifest back to ui-root-env
   - name: 'gcr.io/cloud-builders/gcloud'
-    id: Push manifest
+    id: push_manifest
     entrypoint: /bin/sh
     args:
       - '-c'
@@ -76,7 +77,7 @@ steps:
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
         git push origin candidate
-    wait_for: ['clone_env_repository']
+    wait_for: ['generate_manifest']
 
 # [END cloudbuild-trigger-cd]
 images:
