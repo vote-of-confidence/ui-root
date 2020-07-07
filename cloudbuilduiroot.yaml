@@ -1,42 +1,42 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    id: build-ui-root
-    args:
-      - 'build'
-      - '--no-cache'
-      - '--file=./Dockerfile'
-      - '-t'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-      - '-t'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
-      - '.'
-    waitFor: ['-']
-  # This step pushes the image to Container Registry
-  # The PROJECT_ID and SHORT_SHA variables are automatically
-  # replaced by Cloud Build.
-  - name: 'gcr.io/cloud-builders/docker'
-    id: push-ui-root
-    args:
-      - 'push'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-    wait_for: ['build-ui-root']
-  - name: 'gcr.io/cloud-builders/docker'
-    id: push-ui-root-latest
-    args:
-      - 'push'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
-    wait_for: ['build-ui-root']
-  - name: 'gcr.io/cloud-builders/kubectl'
-    id: deploy-ui-root-latest
-    args:
-      - 'set'
-      - 'image'
-      - 'deployment/ui-root-deployment'
-      - 'ui-root=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
-    wait_for: ['push-ui-root']
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: build-ui-root
+#    args:
+#      - 'build'
+#      - '--no-cache'
+#      - '--file=./Dockerfile'
+#      - '-t'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#      - '-t'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+#      - '.'
+#    waitFor: ['-']
+#  # This step pushes the image to Container Registry
+#  # The PROJECT_ID and SHORT_SHA variables are automatically
+#  # replaced by Cloud Build.
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: push-ui-root
+#    args:
+#      - 'push'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#    wait_for: ['build-ui-root']
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: push-ui-root-latest
+#    args:
+#      - 'push'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+#    wait_for: ['build-ui-root']
+#  - name: 'gcr.io/cloud-builders/kubectl'
+#    id: deploy-ui-root-latest
+#    args:
+#      - 'set'
+#      - 'image'
+#      - 'deployment/ui-root-deployment'
+#      - 'ui-root=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#    env:
+#      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
+#      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
+#    wait_for: ['push-ui-root']
 
   # [START cloudbuild-trigger-cd]
   # This step clones the ui-root-env repository
@@ -50,24 +50,25 @@ steps:
         git clone https://github.com/vote-of-confidence/ui-root-env.git  && \
         cd ui-root-env && \
         git checkout candidate && \
-        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-    wait_for: ['push-ui-root']
+        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
+        ls -a
 
   # This step generates the new manifest
-  - name: 'gcr.io/cloud-builders/gcloud'
-    id: generate_manifest
-    entrypoint: /bin/sh
+  - name: 'gcr.io/cloud-builders/git'
+    id:  generate_manifest
+    entrypoint: 'bash'
+    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ui-root-env/kubernetes.yaml
-    wait_for: ['clone_env_repository']
 
-  # This step pushes the manifest back to ui-root-env
-  - name: 'gcr.io/cloud-builders/gcloud'
-    id: push_manifest
-    entrypoint: /bin/sh
+  # This step pushes the manifest back to ui-root-env push_manifest
+  - name: 'gcr.io/cloud-builders/git'
+    id:  push_manifest
+    entrypoint: 'bash'
+    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
@@ -78,9 +79,9 @@ steps:
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
         git push origin candidate
-    wait_for: ['generate_manifest']
+
 
 # [END cloudbuild-trigger-cd]
-images:
-  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+#images:
+#  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
 timeout: '1800s'
