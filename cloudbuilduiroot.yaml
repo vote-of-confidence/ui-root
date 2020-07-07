@@ -89,12 +89,12 @@ steps:
       - |
         cd /persistent_volume/ui-root-env && \
         set -x && \
+         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
         git add kubernetes.yaml && \
         git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-        git push 'https://source.developers.google.com/p/$PROJECT_ID/r/github_vote-of-confidence_ui-root-env' candidate
-
+        git push origin candidate
 # [END cloudbuild-trigger-cd]
 #images:
 #  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
