@@ -42,36 +42,49 @@ steps:
   # This step clones the ui-root-env repository
   - name: 'gcr.io/cloud-builders/git'
     id: clone_env_repository
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
+        cd /persistent_volume && \
         git clone https://github.com/vote-of-confidence/ui-root-env.git  && \
         cd ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
-        ls -a
+        ls -a  && \
+        pwd
 
   # This step generates the new manifest
   - name: 'gcr.io/cloud-builders/git'
     id:  generate_manifest
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
+        cd /persistent_volume && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ui-root-env/kubernetes.yaml
 
   # This step pushes the manifest back to ui-root-env push_manifest
   - name: 'gcr.io/cloud-builders/git'
     id:  push_manifest
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - '-c'
       - |
+        cd /persistent_volume && \
         set -x && \
         cd ui-root-env && \
         git add kubernetes.yaml && \
