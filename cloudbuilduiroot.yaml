@@ -74,7 +74,11 @@ steps:
         pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > /persistent_volume/ui-root-env/kubernetes.yaml && \
-        cat /persistent_volume/ui-root-env/kubernetes.yaml
+        set -x && \
+        git add kubernetes.yaml && \
+        git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
+        Built from commit ${COMMIT_SHA} of repository ui-root
+        Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
 
   # This step pushes the manifest back to ui-root-env push_manifest
   - name: 'gcr.io/cloud-builders/git'
@@ -84,16 +88,7 @@ steps:
         path: '/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
-    args:
-      - '-c'
-      - |
-        cd /persistent_volume/ui-root-env && \
-        set -x && \
-        git add kubernetes.yaml && \
-        git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
-        Built from commit ${COMMIT_SHA} of repository ui-root
-        Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-      - ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/$REPO', 'candidate']
+    args: ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/$REPO', 'candidate']
 
 # [END cloudbuild-trigger-cd]
 #images:
