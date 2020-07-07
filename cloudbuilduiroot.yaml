@@ -69,7 +69,9 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume && \
+        cd /persistent_volume/ui-root-env && \
+        ls -a && \
+        pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
         sed "s/COMMIT_SHA/${SHORT_SHA}/g" > ui-root-env/kubernetes.yaml
 
@@ -84,7 +86,7 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume && \
+        cd /persistent_volume/ui-root-env && \
         set -x && \
         cd ui-root-env && \
         git add kubernetes.yaml && \
