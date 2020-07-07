@@ -73,7 +73,8 @@ steps:
         ls -a && \
         pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
-        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > /persistent_volume/ui-root-env/kubernetes.yaml
+        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > /persistent_volume/ui-root-env/kubernetes.yaml && \
+        cat /persistent_volume/ui-root-env/kubernetes.yaml
 
   # This step pushes the manifest back to ui-root-env push_manifest
   - name: 'gcr.io/cloud-builders/git'
