@@ -93,8 +93,7 @@ steps:
         git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-        git push origin candidate
-
+      - ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/$REPO', 'candidate']
 
 # [END cloudbuild-trigger-cd]
 #images:
