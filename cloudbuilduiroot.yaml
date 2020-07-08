@@ -65,8 +65,7 @@ steps:
   - name: 'gcr.io/cloud-builders/git'
     args:
       - '-c'
-      - |
-        cd /persistent_volume
+      - 'cd /persistent_volume'
       - clone
       - git@github.com:vote-of-confidence/ui-root-env.git
     volumes:
