@@ -89,9 +89,6 @@ steps:
         ls -a  && \
         pwd
 
-  - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "--tag=gcr.io/$PROJECT_ID/kustomize", "."]
-
   - # Verify kustomize has been built correctly
     name: "gcr.io/$PROJECT_ID/kustomize"
     entrypoint: "kustomize"
