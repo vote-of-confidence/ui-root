@@ -38,6 +38,43 @@ steps:
 #      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
 #    wait_for: ['push-ui-root']
 
+
+# Access the id_github file from Secret Manager
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: 'bash'
+    args: [ '-c', 'gcloud secrets versions access latest --secret=voc-github > /root/.ssh/id_github' ]
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+  # Set up git with key and domain
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        chmod 600 /root/.ssh/id_github
+        cat <<EOF >/root/.ssh/config
+        Hostname github.com
+        IdentityFile /root/.ssh/id_github
+        EOF
+        ssh-keyscan -t rsa github.com > /root/.ssh/known_hosts
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+  # Connect to the repository
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - '-c'
+      - |
+        cd /persistent_volume
+      - clone
+      - git@github.com:vote-of-confidence/ui-root-env.git
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+      - name: 'vol1'
+        path: '/persistent_volume'
+
   # [START cloudbuild-trigger-cd]
   # This step clones the ui-root-env repository
   - name: 'gcr.io/cloud-builders/git'
@@ -51,7 +88,6 @@ steps:
       - '-c'
       - |
         cd /persistent_volume && \
-        git clone https://github.com/vote-of-confidence/ui-root-env.git  && \
         cd ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
@@ -82,6 +118,8 @@ steps:
     volumes:
       - name: 'vol1'
         path: '/persistent_volume'
+      - name: 'ssh'
+        path: /root/.ssh
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
@@ -89,12 +127,14 @@ steps:
       - |
         cd /persistent_volume/ui-root-env && \
         set -x && \
-         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
+        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
         git add kubernetes.yaml && \
         git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-        git push origin candidate
+      - push
+      - origin
+      - candidate
 # [END cloudbuild-trigger-cd]
 #images:
 #  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
