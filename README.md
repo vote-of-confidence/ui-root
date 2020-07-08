@@ -1,6 +1,7 @@
 # ui-root
 general frontend app (pages like about, menu, etc)
 pack to docker container with nginx
+based on Vue.js framework
 ## Project setup
 ```
 npm install
