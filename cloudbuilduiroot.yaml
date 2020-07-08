@@ -63,9 +63,8 @@ steps:
         path: /root/.ssh
   # Connect to the repository
   - name: 'gcr.io/cloud-builders/git'
+    dir: persistent_volume
     args:
-      - '-c'
-      - 'cd /persistent_volume'
       - clone
       - git@github.com:vote-of-confidence/ui-root-env.git
     volumes:
@@ -78,6 +77,7 @@ steps:
   # This step clones the ui-root-env repository
   - name: 'gcr.io/cloud-builders/git'
     id: clone_env_repository
+    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/persistent_volume'
@@ -86,7 +86,6 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume && \
         cd ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
@@ -96,6 +95,7 @@ steps:
   # This step generates the new manifest
   - name: 'gcr.io/cloud-builders/git'
     id:  generate_manifest
+    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/persistent_volume'
@@ -104,7 +104,7 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume/ui-root-env && \
+        cd ui-root-env && \
         ls -a && \
         pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
@@ -114,6 +114,7 @@ steps:
   # This step pushes the manifest back to ui-root-env push_manifest
   - name: 'gcr.io/cloud-builders/git'
     id:  push_manifest
+    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/persistent_volume'
@@ -131,6 +132,18 @@ steps:
         git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
         Built from commit ${COMMIT_SHA} of repository ui-root
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+
+  - name: 'gcr.io/cloud-builders/git'
+    id:  push_
+    dir: persistent_volume
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
+      - name: 'ssh'
+        path: /root/.ssh
+    entrypoint: 'bash'
+    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
+    args:
       - push
       - origin
       - candidate
