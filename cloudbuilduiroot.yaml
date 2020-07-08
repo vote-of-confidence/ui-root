@@ -132,6 +132,7 @@ steps:
 
   - name: 'gcr.io/cloud-builders/git'
     id:  push_
+    dir: /workspace/persistent_volume
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
@@ -139,10 +140,7 @@ steps:
         path: /root/.ssh
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
-    args:
-      - push
-      - origin
-      - candidate
+    args: ['push', 'origin', 'candidate']
 # [END cloudbuild-trigger-cd]
 #images:
 #  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
