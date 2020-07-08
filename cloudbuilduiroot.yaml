@@ -131,16 +131,16 @@ steps:
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
 
   - name: 'gcr.io/cloud-builders/git'
-    id:  push_
-    dir: /workspace/persistent_volume
+    dir: persistent_volume
+    args:
+      - push
+      - origin
+      - candidate
     volumes:
-      - name: 'vol1'
-        path: '/workspace/persistent_volume'
       - name: 'ssh'
         path: /root/.ssh
-    entrypoint: 'bash'
-    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
-    args: ['git', 'push', 'origin', 'candidate']
+      - name: 'vol1'
+        path: '/workspace/persistent_volume'
 # [END cloudbuild-trigger-cd]
 #images:
 #  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
