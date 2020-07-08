@@ -1,5 +1,5 @@
 # ui-root
-general frontend app (pages like about, menu, etc)
+general frontend app (pages like about, menu, e.t.c)
 pack to docker container with nginx
 based on Vue.js framework
 ## Project setup
