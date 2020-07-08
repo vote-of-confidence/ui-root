@@ -1,41 +1,41 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    id: build-ui-root
-    args:
-      - 'build'
-      - '--no-cache'
-      - '--file=./Dockerfile'
-      - '-t'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-      - '-t'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
-      - '.'
-
-  # This step pushes the image to Container Registry
-  # The PROJECT_ID and SHORT_SHA variables are automatically
-  # replaced by Cloud Build.
-  - name: 'gcr.io/cloud-builders/docker'
-    id: push-ui-root
-    args:
-      - 'push'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-
-  - name: 'gcr.io/cloud-builders/docker'
-    id: push-ui-root-latest
-    args:
-      - 'push'
-      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
-
-  - name: 'gcr.io/cloud-builders/kubectl'
-    id: deploy-ui-root-latest
-    args:
-      - 'set'
-      - 'image'
-      - 'deployment/ui-root-deployment'
-      - 'ui-root=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: build-ui-root
+#    args:
+#      - 'build'
+#      - '--no-cache'
+#      - '--file=./Dockerfile'
+#      - '-t'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#      - '-t'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+#      - '.'
+#
+#  # This step pushes the image to Container Registry
+#  # The PROJECT_ID and SHORT_SHA variables are automatically
+#  # replaced by Cloud Build.
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: push-ui-root
+#    args:
+#      - 'push'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#
+#  - name: 'gcr.io/cloud-builders/docker'
+#    id: push-ui-root-latest
+#    args:
+#      - 'push'
+#      - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
+#
+#  - name: 'gcr.io/cloud-builders/kubectl'
+#    id: deploy-ui-root-latest
+#    args:
+#      - 'set'
+#      - 'image'
+#      - 'deployment/ui-root-deployment'
+#      - 'ui-root=eu.gcr.io/$PROJECT_ID/voc-ui-root:$SHORT_SHA'
+#    env:
+#      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
+#      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
 
 # Access the id_github file from Secret Manager
   - name: gcr.io/cloud-builders/gcloud
@@ -89,57 +89,76 @@ steps:
         ls -a  && \
         pwd
 
-  # This step generates the new manifest
-  - name: 'gcr.io/cloud-builders/git'
-    id:  generate_manifest
+
+  - name: 'gcr.io/$PROJECT_ID/kustomize'
+    id: kustomize
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
-    entrypoint: 'bash'
-    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
+    entrypoint: bash
     args:
       - '-c'
       - |
         cd /workspace/persistent_volume/ui-root-env && \
-        ls -a && \
-        pwd && \
-        sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
-        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > /workspace/persistent_volume/ui-root-env/kubernetes.yaml && \
-        cat /workspace/persistent_volume/ui-root-env/kubernetes.yaml
+        gcloud container clusters get-credentials --zone "$$CLOUDSDK_COMPUTE_ZONE" "$$CLOUDSDK_CONTAINER_CLUSTER" && \
+        kustomize build . > kusto.yaml && \
+        cat kusto.yaml
 
-  # This step pushes the manifest back to ui-root-env push_manifest
-  - name: 'gcr.io/cloud-builders/git'
-    id:  prepare_manifest
-    volumes:
-      - name: 'vol1'
-        path: '/workspace/persistent_volume'
-      - name: 'ssh'
-        path: /root/.ssh
-    entrypoint: 'bash'
-    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
-    args:
-      - '-c'
-      - |
-        cd /workspace/persistent_volume/ui-root-env && \
-        set -x && \
-        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
-        git add kubernetes.yaml && \
-        git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
-        Built from commit ${COMMIT_SHA} of repository ui-root
-        Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=voc-cluster-1'
 
-  - name: 'gcr.io/cloud-builders/git'
-    dir: /workspace/persistent_volume/ui-root-env
-    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
-    args:
-      - push
-      - origin
-      - candidate
-    volumes:
-      - name: 'ssh'
-        path: /root/.ssh
-      - name: 'vol1'
-        path: '/workspace/persistent_volume'
+#  # This step generates the new manifest
+#  - name: 'gcr.io/cloud-builders/git'
+#    id:  generate_manifest
+#    volumes:
+#      - name: 'vol1'
+#        path: '/workspace/persistent_volume'
+#    entrypoint: 'bash'
+#    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
+#    args:
+#      - '-c'
+#      - |
+#        cd /workspace/persistent_volume/ui-root-env && \
+#        ls -a && \
+#        pwd && \
+#        sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
+#        sed "s/COMMIT_SHA/${SHORT_SHA}/g" > /workspace/persistent_volume/ui-root-env/kubernetes.yaml && \
+#        cat /workspace/persistent_volume/ui-root-env/kubernetes.yaml
+#
+#  # This step pushes the manifest back to ui-root-env push_manifest
+#  - name: 'gcr.io/cloud-builders/git'
+#    id:  prepare_manifest
+#    volumes:
+#      - name: 'vol1'
+#        path: '/workspace/persistent_volume'
+#      - name: 'ssh'
+#        path: /root/.ssh
+#    entrypoint: 'bash'
+#    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
+#    args:
+#      - '-c'
+#      - |
+#        cd /workspace/persistent_volume/ui-root-env && \
+#        set -x && \
+#        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
+#        git add kubernetes.yaml && \
+#        git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
+#        Built from commit ${COMMIT_SHA} of repository ui-root
+#        Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
+#
+#  - name: 'gcr.io/cloud-builders/git'
+#    dir: /workspace/persistent_volume/ui-root-env
+#    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
+#    args:
+#      - push
+#      - origin
+#      - candidate
+#    volumes:
+#      - name: 'ssh'
+#        path: /root/.ssh
+#      - name: 'vol1'
+#        path: '/workspace/persistent_volume'
 # [END cloudbuild-trigger-cd]
 #images:
 #  - 'eu.gcr.io/$PROJECT_ID/voc-ui-root:latest'
