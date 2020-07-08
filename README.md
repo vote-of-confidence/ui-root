@@ -1,6 +1,6 @@
 # ui-root
 general frontend app (pages like about, menu, etc)
-
+pack to docker container with nginx
 ## Project setup
 ```
 npm install
