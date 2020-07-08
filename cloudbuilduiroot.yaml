@@ -131,7 +131,8 @@ steps:
         Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
 
   - name: 'gcr.io/cloud-builders/git'
-    dir: persistent_volume
+    dir: /workspace/persistent_volume/ui-root-env
+    env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
       - push
       - origin
