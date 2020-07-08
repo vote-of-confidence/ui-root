@@ -128,7 +128,7 @@ steps:
         git add kubernetes.yaml && \
         git commit -m "Deploying image eu.gcr.io/$PROJECT_ID/voc-ui-root:${SHORT_SHA}
         Built from commit ${COMMIT_SHA} of repository ui-root
-        Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+        Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
 
   - name: 'gcr.io/cloud-builders/git'
     id:  push_
