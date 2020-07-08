@@ -71,7 +71,7 @@ steps:
       - name: 'ssh'
         path: /root/.ssh
       - name: 'vol1'
-        path: '/persistent_volume'
+        path: '/workspace/persistent_volume'
 
   # [START cloudbuild-trigger-cd]
   # This step clones the ui-root-env repository
@@ -80,7 +80,7 @@ steps:
     dir: persistent_volume
     volumes:
       - name: 'vol1'
-        path: '/persistent_volume'
+        path: '/workspace/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
@@ -98,7 +98,7 @@ steps:
     dir: persistent_volume
     volumes:
       - name: 'vol1'
-        path: '/persistent_volume'
+        path: '/workspace/persistent_volume'
     entrypoint: 'bash'
     env: ['GIT_DISCOVERY_ACROSS_FILESYSTEM=1']
     args:
@@ -117,7 +117,7 @@ steps:
     dir: persistent_volume
     volumes:
       - name: 'vol1'
-        path: '/persistent_volume'
+        path: '/workspace/persistent_volume'
       - name: 'ssh'
         path: /root/.ssh
     entrypoint: 'bash'
@@ -138,7 +138,7 @@ steps:
     dir: persistent_volume
     volumes:
       - name: 'vol1'
-        path: '/persistent_volume'
+        path: '/workspace/persistent_volume'
       - name: 'ssh'
         path: /root/.ssh
     entrypoint: 'bash'
