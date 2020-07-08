@@ -102,7 +102,7 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume/ui-root-env && \
+        cd /workspace/persistent_volume/ui-root-env && \
         ls -a && \
         pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
@@ -122,7 +122,7 @@ steps:
     args:
       - '-c'
       - |
-        cd /persistent_volume/ui-root-env && \
+        cd /workspace/persistent_volume/ui-root-env && \
         set -x && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
         git add kubernetes.yaml && \
