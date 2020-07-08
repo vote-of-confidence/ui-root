@@ -77,7 +77,6 @@ steps:
   # This step clones the ui-root-env repository
   - name: 'gcr.io/cloud-builders/git'
     id: clone_env_repository
-    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
@@ -86,7 +85,7 @@ steps:
     args:
       - '-c'
       - |
-        cd ui-root-env && \
+        cd /workspace/persistent_volume/ui-root-env && \
         git checkout candidate && \
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
         ls -a  && \
@@ -95,7 +94,6 @@ steps:
   # This step generates the new manifest
   - name: 'gcr.io/cloud-builders/git'
     id:  generate_manifest
-    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
@@ -104,7 +102,7 @@ steps:
     args:
       - '-c'
       - |
-        cd ui-root-env && \
+        cd /persistent_volume/ui-root-env && \
         ls -a && \
         pwd && \
         sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" kubernetes.yaml.tpl | \
@@ -113,8 +111,7 @@ steps:
 
   # This step pushes the manifest back to ui-root-env push_manifest
   - name: 'gcr.io/cloud-builders/git'
-    id:  push_manifest
-    dir: persistent_volume
+    id:  prepare_manifest
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
@@ -135,7 +132,6 @@ steps:
 
   - name: 'gcr.io/cloud-builders/git'
     id:  push_
-    dir: persistent_volume
     volumes:
       - name: 'vol1'
         path: '/workspace/persistent_volume'
