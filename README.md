@@ -3,6 +3,7 @@ general frontend app (pages like about, menu, e.t.c)
 pack to docker container with nginx
 based on Vue.js framework
 config at external env repo 
+with kustomize config generation
 ## Project setup
 ```
 npm install
