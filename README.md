@@ -4,6 +4,7 @@ pack to docker container with nginx
 based on Vue.js framework
 config at external env repo 
 with kustomize k8s config generation
+GitOps
 ## Project setup
 ```
 npm install
