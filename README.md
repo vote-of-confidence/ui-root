@@ -1,4 +1,6 @@
 # ui-root
+image::https://badges.gitter.im/Join%20Chat.svg[Gitter,link=https://gitter.im/vote-of-confidence/community]
+
 general frontend app (pages like about, menu, e.t.c)
 pack to docker container with nginx
 based on Vue.js framework
